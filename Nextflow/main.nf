@@ -7,8 +7,9 @@ nextflow.enable.dsl=2
 include { Outrider; OutriderCount; MergeOutridercounts; CreateOutriderDataset; OutriderOptim; MergeQfiles } from "./outrider/outrider"
 include { Fraser; MergeCounts; FraserCount } from "./fraser/fraser"
 include { MAEreadCounting; GetMAEresults } from "./MAE/MAE"
+include { ResultsToHtml } from "./html_report/report"
 
-workflow Outrider_nf {
+workflow Outrider_Fraser_nf {
     /* 
     Gagneurlab Outrider Nextflow implementation 
     */
@@ -43,10 +44,7 @@ workflow Outrider_nf {
     outrider_ch
     | map { it -> tuple( "$params.output/outrider/outrider.rds", it, params.samplesheet )} //Hacky to include the outputdir outrider.rds.
     | Outrider
- 
-}
 
-workflow Fraser_nf {
     /* 
     Gagneurlab Fraser Nextflow implementation with external counts.
     Since it was a bit tricky to implement this parallized like Outrider
@@ -62,7 +60,15 @@ workflow Fraser_nf {
     FraserCount(params.fraser.frasercountsR, params.samplesheet, bamfiles_ch.collect(), baifiles_ch.collect())
     MergeCounts(params.extcounts.folder, params.fraser.mergescriptR, FraserCount.out, params.extcounts.amount_fraser)
     Fraser(params.samplesheet, MergeCounts.out, params.fraser.fraserR)
+
+    // report
+    Channel.empty().mix(Outrider.out, Fraser.out)
+    | collect
+    | map {it -> tuple(params.samplesheet, it)}
+    | ResultsToHtml
+
 }
+
 
 workflow MAE_nf {
     readcount_ch = Channel
@@ -77,7 +83,8 @@ workflow MAE_nf {
 }
 
 workflow {
-    //Outrider_nf()
-    //Fraser_nf()
-    MAE_nf()
+    // Run the workflows
+    Outrider_Fraser_nf()
+    //MAE_nf()
+    
 }

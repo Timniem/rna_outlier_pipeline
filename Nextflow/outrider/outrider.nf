@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 process OutriderCount {
     time '30m'
     memory '8 GB'
-    cpus 1
+    cpus 4
 
     publishDir "$params.output/counts", mode: 'copy'
 

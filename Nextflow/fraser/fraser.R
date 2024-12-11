@@ -56,10 +56,11 @@ res <- res[res$sampleID %in% original_settingsTable$sampleID] #filter out sample
 # Rename for compatibility
 names(res)[names(res) == 'seqnames'] <- 'chr'
 
-write.table(res, paste("combined_samples", 'result_table_fraser.tsv', sep='_'), sep='\t', append = FALSE, row.names = FALSE, col.names = TRUE)
-
 # Results per patient
 for (sampleid in unique(res$sampleID)){
     sample_out_path = paste(sampleid, 'result_table_fraser.tsv', sep='_')
     write.table(res[res$sampleID == sampleid], sample_out_path, sep='\t', append = FALSE, row.names = FALSE, col.names = TRUE)
 }
+
+write.table(res, paste("combined_samples", 'result_table_fraser.tsv', sep='_'), sep='\t', append = FALSE, row.names = FALSE, col.names = TRUE)
+
