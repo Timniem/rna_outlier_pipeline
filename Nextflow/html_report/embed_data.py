@@ -19,7 +19,7 @@ def scatter_plot_outrider(data):
 
         """
         data = data.replace([np.inf, -np.inf], 1)
-        data = data.replace(np.NaN, 1)
+        data = data.replace(np.nan, 1)
         data["minlogpVal"] = -np.log(data.pValue)
         fig = px.scatter(data, x="zScore", y="minlogpVal", hover_data=["gene"], color_discrete_sequence=["#8c8c8c"], labels={
                      "zScore": "zScore",
@@ -40,7 +40,7 @@ def scatter_plot_fraser(data):
 
         """
         data = data.replace([np.inf, -np.inf], 1)
-        data = data.replace(np.NaN, 1)
+        data = data.replace(np.nan, 1)
         data["minlogpVal"] = -np.log(data.pValue)
         fig = px.scatter(data, x="deltaPsi", y="minlogpVal", hover_data=["gene"], color_discrete_sequence=["#8c8c8c"], labels={
                      "deltaPsi": "deltaPsi",
@@ -117,10 +117,12 @@ if __name__ == "__main__":
     # gene enrichment analysis using gProfiler
     gp = GProfiler(return_dataframe=True)
     gene_query = [gene.split('.')[0] for gene in outr_df['EnsemblID'][outr_df["padjust"] < 0.05 ].tolist()]
-    gene_enrichment_df = gp.profile(organism='hsapiens', query=gene_query)
+    if gene_query:
+        gene_enrichment_df = gp.profile(organism='hsapiens', query=gene_query)
+        gene_enrichment_html = gene_enrichment_df.to_html(index=False, classes='gene_enrichment', border=0)
+    else:
+        gene_enrichment_html = " <h3>No result</h3>"
 
-
-    gene_enrichment_html = gene_enrichment_df.to_html(index=False, classes='gene_enrichment', border=0)
     # open html template
     with open(html_template, "r") as html_template_file:
            template = html_template_file.read()
