@@ -7,7 +7,7 @@ from jinja2 import Template
 from gprofiler import GProfiler
 
 #Plot functions
-def scatter_plot_outrider(data):
+def scatter_plot_outrider(data, padj_treshold=0.05):
         """
         Scatter plot function for outrider (gene expression) data.
         --------------
@@ -21,14 +21,15 @@ def scatter_plot_outrider(data):
         data = data.replace([np.inf, -np.inf], 1)
         data = data.replace(np.nan, 1)
         data["minlogpVal"] = -np.log(data.pValue)
-        fig = px.scatter(data, x="zScore", y="minlogpVal", hover_data=["gene"], color_discrete_sequence=["#8c8c8c"], labels={
+        data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
+        fig = px.scatter(data, x="zScore", y="minlogpVal", hover_data=["gene"],color_discrete_sequence=["rgba(255, 30, 30, 0.8)","rgba(60, 60, 60, 0.8)"], color='significant', labels={
                      "zScore": "zScore",
                      "minlogpVal": "-log pValue",
                  }, title="Expression volcano plot")
         fig_html = fig.to_html(full_html=False)
         return fig_html
 
-def scatter_plot_fraser(data):
+def scatter_plot_fraser(data, padj_treshold=0.05):
         """
         Scatter plot function for outrider (gene expression) data.
         --------------
@@ -42,7 +43,8 @@ def scatter_plot_fraser(data):
         data = data.replace([np.inf, -np.inf], 1)
         data = data.replace(np.nan, 1)
         data["minlogpVal"] = -np.log(data.pValue)
-        fig = px.scatter(data, x="deltaPsi", y="minlogpVal", hover_data=["gene"], color_discrete_sequence=["#8c8c8c"], labels={
+        data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
+        fig = px.scatter(data, x="deltaPsi", y="minlogpVal", hover_data=["gene"],color_discrete_sequence=["rgba(255, 30, 30, 0.8)","rgba(60, 60, 60, 0.8)"], color='significant', labels={
                      "deltaPsi": "deltaPsi",
                      "minlogpVal": "-log pValue",
                  }, title="Splicing volcano plot")
