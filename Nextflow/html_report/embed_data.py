@@ -22,7 +22,7 @@ def scatter_plot_outrider(data, padj_treshold=0.05):
         data = data.replace(np.nan, 1)
         data["minlogpVal"] = -np.log(data.pValue)
         data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
-        fig = px.scatter(data, x="zScore", y="minlogpVal", hover_data=["gene"],color_discrete_sequence=["rgba(255, 30, 30, 0.8)","rgba(60, 60, 60, 0.8)"], color='significant', labels={
+        fig = px.scatter(data, x="zScore", y="minlogpVal", hover_data=["gene"], color_discrete_map={"True":"rgba(255, 30, 30, 0.8)","False":"rgba(60, 60, 60, 0.8)"}, color='significant', labels={
                      "zScore": "zScore",
                      "minlogpVal": "-log pValue",
                  }, title="Expression volcano plot")
@@ -44,7 +44,7 @@ def scatter_plot_fraser(data, padj_treshold=0.05):
         data = data.replace(np.nan, 1)
         data["minlogpVal"] = -np.log(data.pValue)
         data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
-        fig = px.scatter(data, x="deltaPsi", y="minlogpVal", hover_data=["gene"],color_discrete_sequence=["rgba(255, 30, 30, 0.8)","rgba(60, 60, 60, 0.8)"], color='significant', labels={
+        fig = px.scatter(data, x="deltaPsi", y="minlogpVal", hover_data=["gene"], color_discrete_map={"True":"rgba(255, 30, 30, 0.8)","False":"rgba(60, 60, 60, 0.8)"}, color='significant', labels={
                      "deltaPsi": "deltaPsi",
                      "minlogpVal": "-log pValue",
                  }, title="Splicing volcano plot")
