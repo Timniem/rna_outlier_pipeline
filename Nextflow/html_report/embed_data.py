@@ -8,48 +8,48 @@ from gprofiler import GProfiler
 
 #Plot functions
 def scatter_plot_outrider(data, padj_treshold=0.05):
-        """
-        Scatter plot function for outrider (gene expression) data.
-        --------------
-        inppath_outpututs:
-            data = pd.DataFrame
+    """
+    Scatter plot function for outrider (gene expression) data.
+    --------------
+    inppath_outpututs:
+        data = pd.DataFrame
 
-        outputs:
-            fig_html = interactive plotly html code (HTML)    
+    outputs:
+        fig_html = interactive plotly html code (HTML)    
 
-        """
-        data = data.replace([np.inf, -np.inf], 1)
-        data = data.replace(np.nan, 1)
-        data["minlogpVal"] = -np.log(data.pValue)
-        data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
-        fig = px.scatter(data, x="zScore", y="minlogpVal", hover_data=["gene"], color_discrete_map={"True":"rgba(255, 30, 30, 0.8)","False":"rgba(60, 60, 60, 0.8)"}, color='significant', labels={
-                     "zScore": "zScore",
-                     "minlogpVal": "-log pValue",
-                 }, title="Expression volcano plot")
-        fig_html = fig.to_html(full_html=False)
-        return fig_html
+    """
+    data = data.replace([np.inf, -np.inf], 1)
+    data = data.replace(np.nan, 1)
+    data["minlogpVal"] = -np.log(data.pValue)
+    data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
+    fig = px.scatter(data, x="zScore", y="minlogpVal", hover_data=["gene"], color_discrete_map={"True":"rgba(255, 30, 30, 0.8)","False":"rgba(60, 60, 60, 0.8)"}, color='significant', labels={
+                    "zScore": "zScore",
+                    "minlogpVal": "-log pValue",
+                }, title="Expression volcano plot")
+    fig_html = fig.to_html(full_html=False)
+    return fig_html
 
 def scatter_plot_fraser(data, padj_treshold=0.05):
-        """
-        Scatter plot function for outrider (gene expression) data.
-        --------------
-        inputs:
-            data = pd.DataFrame
+    """
+    Scatter plot function for outrider (gene expression) data.
+    --------------
+    inputs:
+        data = pd.DataFrame
 
-        outputs:
-            fig_html = interactive plotly html code (HTML)    
+    outputs:
+        fig_html = interactive plotly html code (HTML)    
 
-        """
-        data = data.replace([np.inf, -np.inf], 1)
-        data = data.replace(np.nan, 1)
-        data["minlogpVal"] = -np.log(data.pValue)
-        data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
-        fig = px.scatter(data, x="deltaPsi", y="minlogpVal", hover_data=["gene"], color_discrete_map={"True":"rgba(255, 30, 30, 0.8)","False":"rgba(60, 60, 60, 0.8)"}, color='significant', labels={
-                     "deltaPsi": "deltaPsi",
-                     "minlogpVal": "-log pValue",
-                 }, title="Splicing volcano plot")
-        fig_html = fig.to_html(full_html=False)
-        return fig_html
+    """
+    data = data.replace([np.inf, -np.inf], 1)
+    data = data.replace(np.nan, 1)
+    data["minlogpVal"] = -np.log(data.pValue)
+    data["significant"] = ['True' if padj < padj_treshold else "False" for padj in data["padjust"]]
+    fig = px.scatter(data, x="deltaPsi", y="minlogpVal", hover_data=["gene"], color_discrete_map={"True":"rgba(255, 30, 30, 0.8)","False":"rgba(60, 60, 60, 0.8)"}, color='significant', labels={
+                    "deltaPsi": "deltaPsi",
+                    "minlogpVal": "-log pValue",
+                }, title="Splicing volcano plot")
+    fig_html = fig.to_html(full_html=False)
+    return fig_html
 
 if __name__ == "__main__":
 
@@ -83,18 +83,20 @@ if __name__ == "__main__":
     
 
     if args["genepanel"]:
-           with open(args["genepanel"], 'r') as gene_file:
-                genes = [line.strip().upper() for line in gene_file]
-                outr_df = outr_df[outr_df["gene"].isin(genes)]
-                frasr_df = frasr_df[frasr_df["gene"].isin(genes)]
+        gene_panel_name = args["genepanel"]
+        with open(args["genepanel"], 'r') as gene_file:
+            genepanel_list = [line.strip().upper() for line in gene_file]
+    else:
+        gene_panel_name = 'none'
+        genepanel_list = []
 
     if args["hpo"]:
-           with open(args["hpo"], 'r') as hpo_file:
-                hpo_terms = [line.strip().upper() for line in hpo_file]
-                hpo_df = pd.read_csv('resources/phenotype_to_genes.txt', sep='\t')
-                hpo_df = hpo_df[["gene_symbol","hpo_id"]][hpo_df.hpo_id.isin(hpo_terms)]
-                outr_df["hpo"] = [", ".join(hpo_df.hpo_id[hpo_df.gene_symbol == gene].unique().tolist()) for gene in outr_df["gene"]]
-                frasr_df["hpo"] = [", ".join(hpo_df.hpo_id[hpo_df.gene_symbol == gene].unique().tolist()) for gene in frasr_df["gene"]]
+        with open(args["hpo"], 'r') as hpo_file:
+            hpo_terms = [line.strip().upper() for line in hpo_file]
+            hpo_df = pd.read_csv('resources/phenotype_to_genes.txt', sep='\t')
+            hpo_df = hpo_df[["gene_symbol","hpo_id"]][hpo_df.hpo_id.isin(hpo_terms)]
+            outr_df["hpo"] = [", ".join(hpo_df.hpo_id[hpo_df.gene_symbol == gene].unique().tolist()) for gene in outr_df["gene"]]
+            frasr_df["hpo"] = [", ".join(hpo_df.hpo_id[hpo_df.gene_symbol == gene].unique().tolist()) for gene in frasr_df["gene"]]
     else:
         hpo_terms = False
         outr_df["hpo"] = ["" for gene in outr_df["gene"]]
@@ -107,9 +109,13 @@ if __name__ == "__main__":
 
     # hpo json object for active filters
     if hpo_terms:
-          hpo_terms_json = json.dumps(hpo_terms)
+        hpo_terms_json = json.dumps(hpo_terms)
     else:
-          hpo_terms_json = json.dumps([])
+        hpo_terms_json = json.dumps([])
+    if genepanel_list:
+        gene_list_json = json.dumps(genepanel_list)
+    else:
+        gene_list_json = json.dumps([])
 
     # create dataframe htmls
     outr_df_html = outr_df[outr_df["padjust"] < .99].to_html(index=False, classes='expression_table', border=0)
@@ -139,7 +145,9 @@ if __name__ == "__main__":
                                      "plot_splicing": frasr_plot_html,
                                      "gene_enrichment": gene_enrichment_html,
                                      "patient_id": sample_id,
-                                     "hpo_terms": hpo_terms_json
+                                     "hpo_terms": hpo_terms_json,
+                                     "gene_panel_name": gene_panel_name,
+                                     "gene_panel_list": gene_list_json,
                                      })
 
     # save the html report

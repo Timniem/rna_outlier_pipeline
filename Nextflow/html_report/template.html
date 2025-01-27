@@ -184,15 +184,18 @@
                 <button onclick="addFilter('gene')">Add</button>
             </div>
             <ul id="gene-filter-list" class="filter-list"></ul>
-            <div class="filter-input">
-                <label for="hpo-filter">HPO Term:</label>
-                <input type="text" id="hpo-filter">
-                <button onclick="addFilter('hpo')">Add</button>
-            </div>
-            <ul id="hpo-filter-list" class="filter-list"></ul>
 
+            <div id="hpo-filter" class="filters">
+                <h4>HPO terms:</h4>
+                <ul id="hpo-filter-list" class="filter-list"></ul>
+            </div>
+            <div id="genepanel-filter" class="filters">
+                <h4>Gene panel:</h4>
+                <label for="genepanelCheckbox">{{gene_panel_name}}</label>
+                <input type="checkbox" id="genepanelCheckbox" onclick=filterTable()>
+            </div>
+            <h4>Threshold filters:</h4>
             <div id="expression-filter" class="filters active">
-                <h4>Expression</h4>
                 <div class="filter-input">
                     <label for="expression-significance-filter">Significance(padjust):</label>
                     <input type="range" id="expression-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
@@ -205,7 +208,6 @@
                 </div>
             </div>
             <div id="splicing-filter" class="filters">
-                <h4>Splicing</h4>
                 <div class="filter-input">
                     <label for="splicing-significance-filter">Significance(padjust):</label>
                     <input type="range" id="splicing-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
@@ -296,17 +298,18 @@
     // Custom filter function for significance
 
     var hpoTerms = {{hpo_terms}}; // Ignore error, is needed for embedding.
+    
 
     // Function to automatically add HPO terms to the filter list
-        hpoTerms.forEach(function(term) {
-            var filterItem = $('<li class="filter-item"></li>').text(term);
-            var removeButton = $('<button>-</button>').click(function() {
-                $(this).parent().remove();
-                filterTable();
-            });
-            filterItem.append(removeButton);
-            $('#hpo-filter-list').append(filterItem);
+    hpoTerms.forEach(function(term) {
+        var filterItem = $('<li class="filter-item"></li>').text(term);
+        var removeButton = $('<button>-</button>').click(function() {
+            $(this).parent().remove();
+            filterTable();
         });
+        filterItem.append(removeButton);
+        $('#hpo-filter-list').append(filterItem);
+    });
 
     
     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
@@ -381,9 +384,15 @@
     }
 
     function filterTable() {
+        var genePanelList = {{gene_panel_list}};
         var geneFilters = $('#gene-filter-list').children().map(function() {
             return $(this).text().slice(0, -1).toLowerCase();
         }).get();
+
+        var genepanelCheckBox = document.getElementById("genepanelCheckbox")
+        if (genepanelCheckBox.checked == true){
+            geneFilters.push.apply(geneFilters, genePanelList);
+        };
         var geneFilterString = geneFilters.length > 0 ? geneFilters.join('|') : '';
 
         var hpoFilters = $('#hpo-filter-list').children().map(function() {
@@ -469,6 +478,22 @@
 
         var activeSectionfilter = document.getElementById(sectionId.concat("-filter"));
         activeSectionfilter.classList.add('active');
+
+        var genePanelList = {{gene_panel_list}};
+        
+        // Additional (optional) filters hpo and genepanel
+        if (genePanelList.length > 0) {
+            document.getElementById("genepanel-filter").classList.add('active')
+        }
+
+        var hpoFilters = $('#hpo-filter-list').children().map(function() {
+            return $(this).text().slice(0, -1).toLowerCase();
+        }).get();
+
+        if (hpoFilters.length > 0) {
+            document.getElementById("hpo-filter").classList.add('active')
+        }
+        
 
     }
     
