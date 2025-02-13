@@ -2,12 +2,16 @@
 #' Gagneur-lab FRASER (2.0)
 #' Processes start from a samplesheet with SampleID's BAM paths featurecount settings etc. 
 #' and creates fraser rds object and results .tsv
-#' 28-10-2023
+#' 28-10-2023 (updated 27-01-2025)
 #' Argument 1: Samplesheet
-#' Argument 2= input/output folder
+#' Argument 2= Input/output 
+#' Argument 3= Genome build (hg38 or hg19)
 
 library(FRASER)
 library(dplyr)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(org.Hs.eg.db)
 
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -20,6 +24,8 @@ if(.Platform$OS.type == "unix") {
 }
 
 workdir <- args[2]
+
+genome_build <- args[3]
 
 # Load original sample table
 
@@ -35,14 +41,13 @@ fds <- optimHyperParams(fds, type="jaccard", plot=FALSE)
 best_q <- bestQ(fds, type="jaccard")
 fds <- FRASER(fds, q=c(jaccard=best_q))
 
-# Using different method of annotation
-#library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-#library(org.Hs.eg.db)
-#txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-#orgDb <- org.Hs.eg.db
-#fds <- annotateRangesWithTxDb(fds, txdb=txdb, orgDb=orgDb)
 
-fds <- annotateRanges(fds) # previous method
+if (genome_build == "hg19") {
+    fds <- annotateRanges(fds, GRCh = 37)
+} else {
+    fds <- annotateRanges(fds, GRCh = 38)
+}
+
 
 fds <- calculatePadjValues(fds, type="jaccard", geneLevel=TRUE) # geneLevel TRUE -> FALSE
 
@@ -53,7 +58,7 @@ res <- as.data.table(results(fds,aggregate=TRUE, all=TRUE))
 
 res <- res[res$sampleID %in% original_settingsTable$sampleID] #filter out samplesheet samples
 
-# Rename for compatibility
+# Rename seqnames to chr
 names(res)[names(res) == 'seqnames'] <- 'chr'
 
 # Results per patient

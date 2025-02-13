@@ -111,6 +111,6 @@ process Outrider {
 
     script: 
         """
-        ${CMD_OUTRIDER_FRASER} Rscript ${params.outrider.outriderR} "${outriderDataset}" "${qfile}" "${samplesheet}" "final_outrider.rds" "result_table_outrider.tsv"
+        ${CMD_OUTRIDER_FRASER} Rscript ${params.outrider.outriderR} "${outriderDataset}" "${qfile}" "${samplesheet}" "final_outrider.rds" "result_table_outrider.tsv" "${params.genomeBuild}"
         """
 }

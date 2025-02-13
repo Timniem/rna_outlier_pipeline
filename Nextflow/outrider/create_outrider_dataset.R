@@ -48,19 +48,20 @@ if (length(args) >= 3){
     } else {
         ext_amount <- 100
     }
-
-    extctsTable <- read.table(gzfile(extctspath), header=TRUE, sep="\t")
-    
-    if (RANDOMEXT){
-        extctsTable <- extctsTable[,c(1,random_extcounts(ext_amount, extctsTable))] # always include the first index
+    if (ext_amount > 0 ){
+        extctsTable <- read.table(gzfile(extctspath), header=TRUE, sep="\t")
+        if (RANDOMEXT){
+            extctsTable <- extctsTable[,c(1,random_extcounts(ext_amount, extctsTable))] # always include the first index
+        } else {
+            extctsTable <- extctsTable[,c(1,2:ext_amount + 1)] # +1 always include the first index
+        }
+        count_data <- merge(x=ctsTable, y=extctsTable, by=c("GeneID"), all=TRUE)
     } else {
-        extctsTable <- extctsTable[,c(1,2:ext_amount + 1)] # +1 always include the first index
+        count_data <- ctsTable
     }
-    count_data <- merge(x=ctsTable, y=extctsTable, by=c("GeneID"), all=TRUE)
 } else {
     count_data <- ctsTable
 }
-
 
 count_data[is.na(count_data)] <- 0
 countDataMatrix <- as.matrix(count_data[ , -1])

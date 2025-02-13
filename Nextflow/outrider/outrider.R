@@ -1,10 +1,12 @@
 #' OUTRIDER autoencoder find q
-#' Script creates ods objects
+#' Last update: 20-01-2025
+#' Script create ods objects
 #' Argument 1= input path ods
 #' Argument 2= qfile
 #' Argument 3= samplesheet
-#' Argument 3= output path ods
-#' Argument 4= output path res
+#' Argument 4= output path ods
+#' Argument 5= output path res
+#' Argument 6= optional genome build (hg19 or hg38)
 
 
 library(OUTRIDER)
@@ -14,6 +16,7 @@ library("AnnotationDbi")
 library("org.Hs.eg.db")
 library("data.table")
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 
 if(.Platform$OS.type == "unix") {
@@ -38,6 +41,7 @@ print(paste0("Optimal q is: ",opt_q))
 
 rds_out_path <- args[4]
 res_out_path <- args[5]
+genome_build <- args[6]
 
 iter <- 15
 
@@ -72,7 +76,11 @@ res$entrezid = mapIds(org.Hs.eg.db,
 names(res)[names(res) == 'geneID'] <- 'EnsemblID'
 
 # Annotate chr start end.
-txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+if (genome_build == "hg19") {
+    txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+} else {
+    txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+}
 
 res$chr = mapIds(txdb,
                     keys=res$entrezid, 
