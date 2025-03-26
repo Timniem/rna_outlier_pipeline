@@ -35,18 +35,19 @@ fds <- loadFraserDataSet(dir=args[1])
 ext_dir <- args[2]
 ext_amount <- as.numeric(args[3])
 
-countfiles <- c(k_j=file.path(ext_dir,"k_j_counts.tsv.gz"), k_theta=file.path(ext_dir,"k_theta_counts.tsv.gz"),
-                n_psi3=file.path(ext_dir,"n_psi3_counts.tsv.gz"), n_psi5=file.path(ext_dir,"n_psi5_counts.tsv.gz"),
-                n_theta=file.path(ext_dir,"n_theta_counts.tsv.gz"))
+if (ext_amount > 0){
+    countfiles <- c(k_j=file.path(ext_dir,"k_j_counts.tsv.gz"), k_theta=file.path(ext_dir,"k_theta_counts.tsv.gz"),
+                    n_psi3=file.path(ext_dir,"n_psi3_counts.tsv.gz"), n_psi5=file.path(ext_dir,"n_psi5_counts.tsv.gz"),
+                    n_theta=file.path(ext_dir,"n_theta_counts.tsv.gz"))
 
-annot <- fread(file.path(ext_dir,"sampleAnnotation.tsv"))
+    annot <- fread(file.path(ext_dir,"sampleAnnotation.tsv"))
 
-
-if (random_ext){
-    samples <- random_sampling(annot$sampleID, ext_amount)
-} else {
-    samples <- annot$sampleID[1:ext_amount]
-}
+    if (random_ext){
+        samples <- random_sampling(annot$sampleID, ext_amount)
+    } else {
+        samples <- annot$sampleID[1:ext_amount]
+    }
 
 fds <- mergeExternalData(fds = fds ,countFiles = countfiles, sampleIDs = samples, annotation = annot)
+}
 fds <- saveFraserDataSet(fds)

@@ -6,9 +6,9 @@ nextflow.enable.dsl=2
 
 
 process FraserCount {
-    time '8h'
-    memory '16 GB'
-    cpus 1
+    time '10h'
+    memory '32 GB'
+    cpus 4
 
     input:
         path frasercountR
@@ -28,7 +28,7 @@ process FraserCount {
 
 process MergeCounts {
     time '1h'
-    memory '46 GB'
+    memory '64 GB'
     cpus 1
 
     input:
@@ -51,7 +51,7 @@ process MergeCounts {
 
 process Fraser {
     time '20h'
-    memory '84 GB'
+    memory '80 GB'
     cpus 6
 
     publishDir "$params.output/fraser", mode: 'copy'
@@ -67,6 +67,6 @@ process Fraser {
 
     script: 
         """
-        ${CMD_OUTRIDER_FRASER} Rscript "${fraserR}" "${samplesheet}" "${output}"
+        ${CMD_OUTRIDER_FRASER} Rscript "${fraserR}" "${samplesheet}" "${output}" "${params.genomeBuild}"
         """
 }
