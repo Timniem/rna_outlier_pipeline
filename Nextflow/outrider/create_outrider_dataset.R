@@ -69,7 +69,7 @@ rownames(countDataMatrix) <- count_data[ , 1]
 
 
 ods <- OutriderDataSet(countData=countDataMatrix)
-ods <- filterExpression(ods, minCounts=TRUE, filterGenes=TRUE)
+ods <- filterExpression(ods, gtfFile=args[5], percentile=0.95, minCounts=FALSE, filterGenes=TRUE)
 ods <- estimateSizeFactors(ods)
 
 # Check if samples need to be excluded from a fit.

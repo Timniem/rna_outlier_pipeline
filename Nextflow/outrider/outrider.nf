@@ -57,7 +57,7 @@ process CreateOutriderDataset{
 
     script: 
         """
-        ${CMD_OUTRIDER_FRASER} Rscript ${params.outrider.outriderDatasetR} "${outriderCounts}" "${samplesheet}" "${params.extcounts.folder}" "${params.extcounts.amount_outrider}"
+        ${CMD_OUTRIDER_FRASER} Rscript ${params.outrider.outriderDatasetR} "${outriderCounts}" "${samplesheet}" "${params.extcounts.folder}" "${params.extcounts.amount_outrider}" "${params.featurecounts.genes_gtf}"
         """
 }
 
