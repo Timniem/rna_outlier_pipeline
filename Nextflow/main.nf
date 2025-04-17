@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 
 include { Outrider; OutriderCount; MergeOutridercounts; CreateOutriderDataset; OutriderOptim; MergeQfiles } from "./outrider/outrider"
 include { Fraser; MergeCounts; FraserCount } from "./fraser/fraser"
-include { MAEreadCounting; GetMAEresults } from "./MAE/MAE"
+include { MAEreadCounting; GetMAEresults; SplitVCFs; ConcatMAEResults } from "./MAE/MAE"
 include { ResultsToHtml } from "./html_report/report"
 
 workflow Outrider_Fraser_nf {
@@ -64,7 +64,7 @@ workflow Outrider_Fraser_nf {
     // report
     Channel.empty().mix(Outrider.out, Fraser.out)
     | collect
-    | map {it -> tuple(params.samplesheet, it)}
+    | map {it -> tuple( params.samplesheet, it )}
     | ResultsToHtml
 
 }
@@ -78,13 +78,29 @@ workflow MAE_nf {
     .filter { it[1] != null }
     .filter { it[1] != "NA" }
 
-    MAEreadCounting(readcount_ch, tuple(params.fasta, params.fastafolder))
-    GetMAEresults(MAEreadCounting.out, params.mae.resultsR)
+    readcount_ch
+    | SplitVCFs
+    | set {splitvcf_ch}
+
+    splitvcf_ch
+    .flatMap { split_vcf ->
+        split_vcf[1].collect { vcfFile ->
+            tuple( split_vcf[0], vcfFile, split_vcf[2], params.fasta, params.fastafolder )
+        }
+    }
+    | MAEreadCounting
+    | set {merge_mae_ch}
+
+    merge_mae_ch.collectFile(name: { it[0] })
+    | ConcatMAEResults
+
+    GetMAEresults(ConcatMAEResults.out, params.mae.resultsR)
+        
 }
 
 workflow {
     // Run the workflows
-    Outrider_Fraser_nf()
-    //MAE_nf()
+    //Outrider_Fraser_nf()
+    MAE_nf()
     
 }
