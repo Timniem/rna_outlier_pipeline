@@ -127,6 +127,8 @@ process ConcatMAEResults {
     memory '4 GB'
     cpus 1
 
+    publishDir "$params.output/MAE/ASEreadcounts", mode: 'copy'
+
     input:
         tuple val(sampleID), path(mae_files)
 
