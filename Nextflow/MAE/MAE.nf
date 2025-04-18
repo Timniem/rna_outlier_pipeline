@@ -122,6 +122,11 @@ process SplitVCFs {
 
 
 process ConcatMAEResults {
+
+    time '5m'
+    memory '4 GB'
+    cpus 1
+
     input:
         tuple val(sampleID), path(mae_files)
 
@@ -131,11 +136,16 @@ process ConcatMAEResults {
 
     script:
     """
-    # Concatenate with header from the first file only
-    head -n 1 \${mae_files[0]} > ${sampleID}_result_mae.tsv
-    for f in "\${mae_files[@]:1}"; do
-        tail -n +2 "\$f" >> ${sampleID}_result_mae.tsv
+    files=( ${mae_files} )
+
+    head -n 1 \${files[@]:0:1} > "tmp.${sampleID}_result_mae.tsv"
+
+    for file in \${files[@]}; do
+        tail -n+2 \$file >> "tmp.${sampleID}_result_mae.tsv"
     done
+
+    cp "tmp.${sampleID}_result_mae.tsv" "${sampleID}_result_mae.tsv"
+
     """
 }
 

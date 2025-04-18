@@ -91,7 +91,8 @@ workflow MAE_nf {
     | MAEreadCounting
     | set {merge_mae_ch}
 
-    merge_mae_ch.collectFile(name: { it[0] })
+    merge_mae_ch
+    .groupTuple(by: 0)
     | ConcatMAEResults
 
     GetMAEresults(ConcatMAEResults.out, params.mae.resultsR)
