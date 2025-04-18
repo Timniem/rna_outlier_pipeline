@@ -12,17 +12,12 @@ process MAEreadCounting {
     time '12h'
     memory '8 GB'
     cpus 1
-
-    publishDir "$params.output/MAE/ASEreadcounts", mode: 'copy'
-
+    
     input:
-        tuple val(sampleID), path(vcf), path(bamFile)
-        tuple val(fasta), path(fastafolder)
+        tuple val(sampleID), path(vcf), path(bamFile), val(fasta), path(fastafolder)
 
     output:
-        val "${sampleID}"
-        path "${sampleID}_maecounts.tsv"
-
+        tuple val("${sampleID}"), path("*_maecounts.tsv")
     script:
     """
     ${CMD_MAE} bash -c '
@@ -41,33 +36,39 @@ process MAEreadCounting {
         exit 1
     fi
 
+    vcf="${vcf}"
+
+    base_vcf="\${vcf%.vcf.gz}"
+
+    contig="\${base_vcf##*.}"
+
     # Remove INFO field, it sometimes contains whitespace or invalid line lengths
-    bcftools annotate -x "INFO" "$vcf" -o ${sampleID}_noinfo.vcf
+    bcftools annotate -x "INFO" "\${vcf}" -o "noinfo_\${base_vcf}.vcf"
 
     # Create index
-    gatk IndexFeatureFile -I "${sampleID}_noinfo.vcf"
+    gatk IndexFeatureFile -I "noinfo_\${base_vcf}.vcf"
 
     # Only select heterozygous variants and only SNPs
-    gatk SelectVariants -V ${sampleID}_noinfo.vcf -O "${sampleID}_temp.vcf" -R "${fasta}" --restrict-alleles-to BIALLELIC -select "vc.getHetCount()==1" --select-type-to-include SNP
+    gatk SelectVariants -V "noinfo_\${base_vcf}.vcf" -O "temp_\${base_vcf}.vcf" -R "${fasta}" --restrict-alleles-to BIALLELIC -select "vc.getHetCount()==1" --select-type-to-include SNP
 
     # Remove duplicates
-    bcftools norm --rm-dup all "${sampleID}_temp.vcf" > "${sampleID}_temp.vcf.tmp" && mv "${sampleID}_temp.vcf.tmp" "${sampleID}_temp.vcf"
+    bcftools norm --rm-dup all "temp_\${base_vcf}.vcf" > "temp_\${base_vcf}.vcf.tmp" && mv "temp_\${base_vcf}.vcf.tmp" "temp_\${base_vcf}.vcf"
 
     # Create new index
-    gatk IndexFeatureFile -I "${sampleID}_temp.vcf"
+    gatk IndexFeatureFile -I "temp_\${base_vcf}.vcf"
 
     # Run ASEReadCounter
-    gatk ASEReadCounter -I "${bamFile}" -V "${sampleID}_temp.vcf" -O "${sampleID}_temp_counts.tsv" -R "${fasta}"
+    gatk ASEReadCounter -I "${bamFile}" -V "temp_\${base_vcf}.vcf" -L "\${contig}" -O "\${base_vcf}_temp_counts.tsv" -R "${fasta}"
 
     # Sorting the count file
-    (head -n 1 "${sampleID}_temp_counts.tsv" && tail -n +2 "${sampleID}_temp_counts.tsv" | sort -k1,1 -V -s) > "${sampleID}_maecounts.tsv"
+    (head -n 1 "\${base_vcf}_temp_counts.tsv" && tail -n +2 "\${base_vcf}_temp_counts.tsv" | sort -k1,1 -V -s) > "\${base_vcf}_maecounts.tsv"
     '
     """
 }
 
 process GetMAEresults {
 
-    time '1h'
+    time '10m'
     memory '4 GB'
     cpus 1
 
@@ -87,6 +88,65 @@ process GetMAEresults {
         ${CMD_MAE} Rscript "${resultsR}" "${asecounts}" "${sampleid}_result_mae.tsv" "${sampleid}"
         """
 
+}
+
+process SplitVCFs {
+
+    time '10m'
+    memory '4 GB'
+    cpus 1
+
+    input:
+        tuple val(sampleID), path(vcf), path(bamFile)
+
+    output:
+        tuple val(sampleID), path("split.${sampleID}.*.vcf.gz"), path(bamFile)
+
+
+    script:
+        """
+        ${CMD_MAE} bash -c '
+         # Index the VCF if not indexed already
+        bcftools index ${vcf}
+
+        # Get the list of chromosome names (skip the header)
+        chroms=\$(bcftools view ${vcf} | grep -v '^#' | cut -f 1 | sort | uniq)
+
+        for C in \${chroms}; do
+            echo "Processing chromosome: \${C}"
+            bcftools view -O z -o split.${sampleID}.\${C}.vcf.gz ${vcf} \${C}
+        done
+        '
+        """
+}
+
+
+process ConcatMAEResults {
+
+    time '5m'
+    memory '4 GB'
+    cpus 1
+
+    input:
+        tuple val(sampleID), path(mae_files)
+
+    output:
+        val "${sampleID}"
+        path "${sampleID}_result_mae.tsv"
+
+    script:
+    """
+    files=( ${mae_files} )
+
+    head -n 1 \${files[@]:0:1} > "tmp.${sampleID}_result_mae.tsv"
+
+    for file in \${files[@]}; do
+        tail -n+2 \$file >> "tmp.${sampleID}_result_mae.tsv"
+    done
+
+    cp "tmp.${sampleID}_result_mae.tsv" "${sampleID}_result_mae.tsv"
+
+    """
 }
 
 
