@@ -95,13 +95,13 @@ workflow MAE_nf {
     .groupTuple(by: 0)
     | ConcatMAEResults
 
-    GetMAEresults(ConcatMAEResults.out, params.mae.resultsR)
+    GetMAEresults(ConcatMAEResults.out, params.mae.resultsR, params.mae.annotateGeneR)
         
 }
 
 workflow {
     // Run the workflows
-    //Outrider_Fraser_nf()
-    MAE_nf()
+    Outrider_Fraser_nf()
+    //MAE_nf()
     
 }

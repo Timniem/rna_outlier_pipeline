@@ -9,8 +9,8 @@ nextflow.enable.dsl=2
 
 
 process MAEreadCounting {
-    time '12h'
-    memory '8 GB'
+    time '4h'
+    memory '4 GB'
     cpus 1
     
     input:
@@ -78,6 +78,7 @@ process GetMAEresults {
         val sampleid
         path asecounts
         path resultsR
+        path annotateGeneR
 
     output:
         
@@ -85,7 +86,8 @@ process GetMAEresults {
 
     script:
         """
-        ${CMD_MAE} Rscript "${resultsR}" "${asecounts}" "${sampleid}_result_mae.tsv" "${sampleid}"
+        ${CMD_MAE} Rscript "${resultsR}" "${asecounts}" "${sampleid}_result_mae_tmp.tsv" "${sampleid}"
+        ${CMD_OUTRIDER_FRASER} Rscript "${annotateGeneR}" "${sampleid}_result_mae_tmp.tsv" "${sampleid}_result_mae.tsv" "${params.genomeBuild}"
         """
 
 }
