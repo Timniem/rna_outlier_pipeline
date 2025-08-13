@@ -24,12 +24,14 @@ process ResultsToHtml {
                 echo "Now processing \${sampleid}:"
                 outrider_path="\${sampleid}_result_table_outrider.tsv"
                 fraser_path="\${sampleid}_result_table_fraser.tsv"
+                mae_path="\${sampleid}_result_mae.tsv"
                 output_path="\${sampleid}_report.html"
                 echo \$outrider_path
                 echo \$fraser_path
+                echo \$mae_path
                 echo \$output_path
                 # run html report script
-                python3 ${params.report.embedScript} -or "\${outrider_path}" -fr "\${fraser_path}" -t "${params.report.htmlTemplate}" -s "\${sampleid}" -o "\${output_path}"
+                python3 ${params.report.embedScript} -or "\${outrider_path}" -fr "\${fraser_path}" -ma "\${mae_path}" -t "${params.report.htmlTemplate}" -s "\${sampleid}" -o "\${output_path}"
             fi
         done < $samplesheet
         '

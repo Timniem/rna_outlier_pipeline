@@ -9,7 +9,7 @@ include { Fraser; MergeCounts; FraserCount } from "./fraser/fraser"
 include { MAEreadCounting; GetMAEresults; SplitVCFs; ConcatMAEResults } from "./MAE/MAE"
 include { ResultsToHtml } from "./html_report/report"
 
-workflow Outrider_Fraser_nf {
+workflow Outrider_Fraser_MAE_nf {
     /* 
     Gagneurlab Outrider Nextflow implementation 
     */
@@ -61,16 +61,6 @@ workflow Outrider_Fraser_nf {
     MergeCounts(params.extcounts.folder, params.fraser.mergescriptR, FraserCount.out, params.extcounts.amount_fraser)
     Fraser(params.samplesheet, MergeCounts.out, params.fraser.fraserR)
 
-    // report
-    Channel.empty().mix(Outrider.out, Fraser.out)
-    | collect
-    | map {it -> tuple( params.samplesheet, it )}
-    | ResultsToHtml
-
-}
-
-
-workflow MAE_nf {
     readcount_ch = Channel
     .fromPath( params.samplesheet )
     .splitCsv( header: true, sep: '\t' )
@@ -96,12 +86,16 @@ workflow MAE_nf {
     | ConcatMAEResults
 
     GetMAEresults(ConcatMAEResults.out, params.mae.resultsR, params.mae.annotateGeneR)
-        
+
+    // report
+    Channel.empty().mix(Outrider.out, Fraser.out, GetMAEresults.out)
+    | collect
+    | map {it -> tuple( params.samplesheet, it )}
+    | ResultsToHtml
+
 }
 
 workflow {
     // Run the workflows
-    Outrider_Fraser_nf()
-    //MAE_nf()
-    
+    Outrider_Fraser_MAE_nf()
 }
