@@ -28,7 +28,11 @@ process ResultsToHtml {
                 output_path="\${sampleid}_report.html"
                 echo \$outrider_path
                 echo \$fraser_path
-                echo \$mae_path
+                if [ -f \$mae_path ]; then
+                    echo \$mae_path
+                else
+                    mae_path=""
+                fi
                 echo \$output_path
                 # run html report script
                 python3 ${params.report.embedScript} -or "\${outrider_path}" -fr "\${fraser_path}" -ma "\${mae_path}" -t "${params.report.htmlTemplate}" -s "\${sampleid}" -o "\${output_path}"

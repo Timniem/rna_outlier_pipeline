@@ -115,6 +115,8 @@ if __name__ == "__main__":
     path_output = args["output"] # example: path/to/patient_x_report.html
     sample_id = args["sampleid"] # sampleId shown in report.
 
+    if not ".tsv" in args["mae"]: #MAE can be empty
+        args["mae"] = None
 
     # load data in pandas
     outr_df = pd.read_csv(path_outr, sep="\t").rename(columns={"hgncSymbol":"gene"})[["gene","EnsemblID","pValue","padjust","zScore","l2fc", "rawcounts", "meanRawcounts", "normcounts", "meanCorrected"]]
@@ -162,9 +164,13 @@ if __name__ == "__main__":
             mae_df["hpo"] = ["" for gene in mae_df["gene"]]
 
     # reorder hpo to second position
-    for df in [outr_df, frasr_df, mae_df]:
+    for df in [outr_df, frasr_df]:
         col = df.pop('hpo')
         df.insert(1, col.name, col)
+    
+    if args["mae"]:
+        col = mae_df.pop('hpo')
+        mae_df.insert(1, col.name, col)
 
     # hpo json object for active filters
     if hpo_terms:
