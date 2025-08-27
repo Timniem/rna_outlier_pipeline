@@ -8,7 +8,7 @@ Results will be stored in a outrider dataset (*.rds) and a resultsfile (*.tsv)
 nextflow.enable.dsl=2
 
 process OutriderCount {
-    time '30m'
+    time '1h'
     memory '8 GB'
     cpus 4
 

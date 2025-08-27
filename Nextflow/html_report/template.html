@@ -1,502 +1,693 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Interactive RNA Outlier Report</title>
-    <link href="https://cdn.datatables.net/v/ju/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-html5-3.1.1/sl-2.0.4/datatables.min.css" rel="stylesheet">
- 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Interactive RNA outliers report</title>
+        <style>
+            body {
+                font-size: medium;
+                font-family: Helvetica, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+                display: block;
+            }
+            
+            .topbar {
+                width: 100%;
+                height: 60px;
+                background-color: #222;
+                color: #fafafa;
+                position: fixed;
+                top: 0;
+                left: 0;
+                display: flex;
+                align-items: center;
+                z-index: 1000;
+                border-bottom: solid #e4e4e4 1px;
+                box-shadow: 1px #dedede;
+                overflow: hidden;
+            }
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
+            #toggle-button {
+                font-size: 30px;
+                padding: 15px;
+                align-items: center;
+                cursor: pointer;
+                color: #fafafa;
+                background-color: #222;
+                border: none;
+                margin-right: 10px;
+            }
+            #toggle-button:hover {
+                color: #fafafa;
+                background-color: #111;
+            }
 
-        header {
-            background-color: #333;
-            color: rgb(255, 255, 255);
-            padding: 10px 20px;
-            text-align: left;
-            font-size: 24px;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            border-bottom: 1px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            overflow: hidden;
-        }
+            .sidebar {
+                list-style-type: none;
+                font-size: medium;
+                padding: 0px;
+                width: 200px;
+                height: 92vh;
+                position: fixed;
+                overflow-y: scroll;
+                left: -220px;
+                top: 45px;
+                transition: 0.2s;
+                z-index: 999;
+                border-right: solid #dadada 1px;
+                background-color: #fafafa;
+                padding-bottom: 20px;
+                -ms-overflow-style: none;  /* Internet Explorer 10+ */
+                scrollbar-width: none;  /* Firefox */
+            }
+            .sidebar::-webkit-scrollbar { 
+                display: none;  /* Safari and Chrome */
+            }
 
-        .header a {
-            cursor: pointer;
-            color: #f2f2f2;
-            text-align: initial;
-            padding: 17px;
-            text-decoration: none;
-            font-size: 17px;
-        }
+            li {
+                display: block;
+            }
 
-        .header a:hover {
-            background-color: #f7f7f7;
-            color: black;
-            border-bottom: 1px solid #ddd;
-        }
+            .sidebar a {
+                display: block;
+                background-color: #fafafa;
+                border-radius: 10px;
+                margin: 10px;
+                text-align: center;
+                font-size: medium;
+                padding: 10px;
+                color: #222222;
+                text-decoration: none;
+                border: #dadada solid 1px;
+                cursor: pointer;
+            }
 
-        .header a.active {
-            background-color: rgb(36, 124, 253);
-            color: white;
-        }
+            .sidebar a:hover {
+                background-color: #f0f0f0;
+            }
 
-        .container {
-            display: flex;
-            margin-top: 55px;
-        }
+            .sidebar a.active {
+                background-color: #222;
+                color: #f4f4f4;
+            }
 
-        .sidebar {
-            width: 180px;
-            padding: 15px;
-            background-color: #f0f0f0;
-            border-right: 1px solid #ddd;
-            position: fixed;
-            top: 20px;
-            bottom: 0;
-            overflow-y: auto;
-            z-index: 999;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .content {
-            display: flex;
-            flex-direction: column;
-            margin-left: 215px;
-            margin-right: 5px;
-            width: 90%;
-            max-width: fit-content;
-        }
-        .row-content {
-            margin-left: 1%;
-            margin-right: 1%;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            display: none;
-            color: #333;
-            flex-direction: row;
-            overflow-x: hidden;
-        }
-
-        .row-content.active {
-            display: flex;
-            flex: auto;
-        }
-
-        .table-container {
-            border-radius: 25px;
-            background-color: #ffffff;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-            border-bottom: 2px solid #e3e3e3;
-            overflow: hidden;
-            padding-right: 15px;
-            padding-left: 15px;
-            width: 60%;
-            max-height: 500px;
-            min-width: 500px;
-            max-width: 1100px;
-        }
-
-        .table-container.expand {
-            width: 98%;
-            min-width: 500px;
-            max-width: 1500px;
-        }
-
-        .plot-container {
-            border-radius: 25px;
-            background-color: #ffffff;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-            border-bottom: 2px solid #e3e3e3;
-            flex:auto;
-            text-align: center;
-            margin-left: 20px;
-            position: right;
-            overflow: hidden;
-            max-width: 400px ;
-            min-width: 500px;
-        }
+            .content {
+                margin-top: 60px;
+                padding: 10px;
+                transition: margin-left 0.2s;
+                flex-direction: column;
+                overflow: scroll;
+                -ms-overflow-style: none;  /* Internet Explorer 10+ */
+                scrollbar-width: none;  /* Firefox */
+            }
+            .content::-webkit-scrollbar { 
+                display: none;  /* Safari and Chrome */
+            }
 
 
-        .filters {
-            display: none;
-        }
+            .card {
+                display: none;
+                background-color: #fafafa;
+                padding: 15px;
+                border-radius: 12px;
+                border: solid #dadada 1px;
+                box-shadow: 1px #cccccc;
+                margin-bottom: 10px;
+                overflow: scroll;
+                -ms-overflow-style: none;  /* Internet Explorer 10+ */
+                scrollbar-width: none;  /* Firefox */
+            }
 
-        .filters.active {
-            display: block;
-        }
+            .card.active {
+                display: block;
+            }
 
 
-        .filter-input {
-            margin-bottom: 20px;
-        }
 
-        .filter-list {
-            list-style-type: none;
-            padding: 0;
-        }
+            .card-header {
+                text-align: center;
+                border-bottom: #dadada solid 1px;
+                color: #222;
+                font-size: medium;
+                margin-top: 0px;
+                padding-bottom: 10px;
+            }
 
-        .filter-list li {
-            margin: 5px 0;
-        }
+            .card-content {
+                display:flex;
+                padding: 10px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-content: stretch;
+            }
 
-        .filter-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #e9ecef;
-            padding: 5px;
-            border-radius: 5px;
-        }
+            .filter-list {
+                list-style-type: none;
+                padding: 0;
+                font-size: small;
+                align-items: left;
+                padding: 5px;
+                margin: 3px;
+            }
 
-        .filter-item button {
-            background-color: orange;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            width: 15px;
-            height: 15px;
-        }
+            .filter-list li {
+                margin: 5px 0;
+            }
 
-    </style>
-</head>
-<body>
-    <header class="header">
-        RNA outliers: {{patient_id}}
-        <a id="expression-button" onclick="showSection('expression')" class="active">Expression</a>
-        <a id ="splicing-button" onclick="showSection('splicing')">Splicing</a>
-    </header>
-    <div class="container">
-        <div class="sidebar">
-            <h4>Filters</h4>
-            <div class="filter-input">
-                <label for="gene-filter">Gene:</label>
-                <input type="text" id="gene-filter">
-                <button onclick="addFilter('gene')">Add</button>
-            </div>
-            <ul id="gene-filter-list" class="filter-list"></ul>
+            .filter-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: #ffffff;
+                padding: 5px;
+                border-radius: 5px;
+            }
 
-            <div id="hpo-filter" class="filters">
-                <h4>HPO terms:</h4>
-                <ul id="hpo-filter-list" class="filter-list"></ul>
-            </div>
-            <div id="genepanel-filter" class="filters">
-                <h4>Gene panel:</h4>
-                <label for="genepanelCheckbox">{{gene_panel_name}}</label>
-                <input type="checkbox" id="genepanelCheckbox" onclick=filterTable()>
-            </div>
-            <h4>Threshold filters:</h4>
-            <div id="expression-filter" class="filters active">
+            .filter-item button {
+                background-color: #ff8965;
+                color: white;
+                border: none;
+                border-radius: 25%;
+                cursor: pointer;
+                width: 12px;
+                height: 5px;
+            }
+
+            .filter-input {
+                font-size: small;
+            }
+
+            .filter-input button {
+                background-color: #fafafa;
+                font-size: x-large;
+                color: #222;
+                border: none;
+                cursor: pointer;
+            }
+
+            .filter-input button:hover {
+                color: #444;
+                
+            }
+
+            .filter-input input {
+                margin: 5px;
+                width: 110px ;
+                border: #dadada solid 1px;
+                height: 20px;
+            } 
+
+
+            .filter-box {
+                display: none;
+                border-radius: 10px;
+                margin: 10px;
+                text-align: center;
+                align-items: center;
+                font-size: medium;
+                padding: 10px;
+                color: #222222;
+                text-decoration: none;
+                border: #dadada solid 1px;
+            }
+
+            .filter-box.active {
+                display: block;
+            }
+
+            .slider {
+                align-items: center;
+                font-size: smaller;
+                text-align: center;
+                color: #222222;
+            }
+
+
+            /*********** Baseline, reset styles ***********/
+            input[type="range"] {
+                -webkit-appearance: none;
+                appearance: none;
+                background: transparent;
+                cursor: pointer;
+                margin-top: 15px;
+            }
+            
+            /* Removes default focus */
+            input[type="range"]:focus {
+                outline: none;
+            }
+            
+            /******** Chrome, Safari, Opera and Edge Chromium styles ********/
+            /* slider track */
+            input[type="range"]::-webkit-slider-runnable-track {
+                background-color: #ebebeb;
+                border-radius: 0.5rem;
+                height: 0.5rem;
+            }
+
+            /* slider thumb */
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none; /* Override default look */
+                appearance: none;
+                margin-top: -4px; /* Centers thumb on the track */
+                background-color: #222;
+                border-radius: 0.5rem;
+                height: 1rem;
+                width: 1rem;
+            }
+
+            input[type="range"]:focus::-webkit-slider-thumb {
+                outline: 3px solid #222;
+                outline-offset: 0.125rem;
+            }
+
+            /*********** Firefox styles ***********/
+            /* slider track */
+            input[type="range"]::-moz-range-track {
+                background-color: #ebebeb;
+                border-radius: 0.5rem;
+                height: 0.5rem;
+            }
+
+            /* slider thumb */
+            input[type="range"]::-moz-range-thumb {
+                background-color: #222;
+                border: none; /*Removes extra border that FF applies*/
+                border-radius: 0.5rem;
+                height: 1rem;
+                width: 1rem;
+            }
+
+            input[type="range"]:focus::-moz-range-thumb{
+                outline: 3px solid #000000;
+                outline-offset: 0.125rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="topbar" class="topbar">
+            <button id="toggle-button">=</button>
+              patient_id: {{patient_id}}
+        </div>
+        <ul id="sidebar" class="sidebar">
+            <div style="height: 5px;"></div>
+            <li><a id="expression-button" class="active" onclick="showSection('expression')">Expression</a></li>
+            <li><a id="splicing-button" onclick="showSection('splicing')">Splicing</a></li>
+            <li><a id="mae-button" onclick="showSection('mae')">MAE</a></li>
+            <li><a id="info-button" onclick="showSection('info')">Info</a></li>
+            
+            <div id="gene-filter" class="filter-box">
                 <div class="filter-input">
-                    <label for="expression-significance-filter">Significance(padjust):</label>
+                    <label for="gene-filter">Gene<br></label>
+                    <input  type="text" id="gene-input">
+                    <button onclick="addFilter('gene')">+</button>
+                </div>
+                <ul id="gene-filter-list" class="filter-list"></ul>
+            </div>
+            <div id="hpo-filter" class="filter-box">
+                <label for="hpo-filter-list" style="font-size: small;">HPO</label>
+                <ul id="hpo-filter-list" class="filter-list"></ul>
+                </div>
+            </div>
+
+            <!-- Expression filters  -->
+            <div id="expression-filters" class="filter-box">
+                <div id="expression-significance-slider" class="slider">
+                    <label for="expression-significance-filter">pValue (FDR adj):</label>
                     <input type="range" id="expression-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
                     <span id="expression-significance-value">0.05</span>
                 </div>
-                <div class="filter-input">
+                <div id="expression-effect-size-slider" class="slider">
                     <label for="expression-effect-size-filter">Effect Size(zScore):</label>
                     <input type="range" id="expression-effect-size-filter" min="0" max="20" step="0.5" value="0" oninput="updateFilterValues()">
                     <span id="expression-effect-size-value">0</span>
                 </div>
             </div>
-            <div id="splicing-filter" class="filters">
-                <div class="filter-input">
-                    <label for="splicing-significance-filter">Significance(padjust):</label>
+            <!-- Splicing filters  -->
+            <div id="splicing-filters" class="filter-box">
+                <div id="splicing-significance-slider" class="slider">
+                    <label for="splicing-significance-filter">pValue (FDR adj):</label>
                     <input type="range" id="splicing-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
                     <span id="splicing-significance-value">0.05</span>
                 </div>
-                <div class="filter-input">
-                    <label for="splicing-effect-size-filter">Effect Size(deltaPsi):</label>
-                    <input type="range" id="splicing-effect-size-filter" min="0" max="1" step="0.05" value="0" oninput="updateFilterValues()">
-                    <span id="splicing-effect-size-value">0</span>
+                <div id="splicing-effect-size-slider" class="slider">
+                        <label for="splicing-effect-size-filter">deltaPsi:</label>
+                        <input type="range" id="splicing-effect-size-filter" min="0" max="1" step="0.05" value="0" oninput="updateFilterValues()">
+                        <span id="splicing-effect-size-value">0</span>
                 </div>
             </div>
-        </div>
-        <div class="content">
-            <div id="expression" class="row-content active">
-                <div class="table-container">
-                    <h3>Expression Outliers</h3>
+            <!-- MAE filters  -->
+            <div id="mae-filters" class="filter-box">
+                <div id="mae-significance-slider" class="slider">
+                    <label for="mae-significance-filter">pValue (FDR adj):</label>
+                    <input type="range" id="mae-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
+                    <span id="mae-significance-value">0.05</span>
+                </div>
+                <div id="mae-effect-size-slider" class="slider">
+                        <label for="mae-effect-size-filter">log2FC:</label>
+                        <input type="range" id="mae-effect-size-filter" min="0" max="20" step="0.5" value="0" oninput="updateFilterValues()">
+                        <span id="mae-effect-size-value">0</span>
+                </div>
+            </div>
+        </ul>
+        <div id="content" class="content">
+            <!-- Expression content  -->
+            <div id="expression-card" class="card">
+                <div class="card-header">Expression outliers</div>
+                <div class="card-content">
                     {{expression_table}}
+                    {{expression_plot}}
                 </div>
-                <div class="plot-container">
-                    {{plot_expression}}
-                </div>
-            </div>
-            <div id="expression-gene-enrichment" class="row-content active">
-                <div class="table-container expand">
-                    <h3>Functional enrichment analysis (g:Profiler)</h3>
+                <div class="card-header">Gene Enrichment Analysis</div>
+                <div class="card-content">
                     {{gene_enrichment}}
                 </div>
             </div>
-            <div id="splicing" class="row-content active">
-                <div class="table-container">
-                    <h3>Splice Outliers</h3>
+            <!-- Splicing content  -->
+            <div id="splicing-card" class="card">
+                <div class="card-header">Splicing outliers</div>
+                <div class="card-content">
                     {{splice_table}}
+                    {{splice_plot}}
                 </div>
-                <div class="plot-container">
-                    {{plot_splicing}}
+            </div>
+            <!-- MAE content  -->
+            <div id="mae-card" class="card">
+                <div class="card-header">Mono allelic expression</div>
+                <div class="card-content">
+                    {{mae_table}}
+                    {{mae_plot}}
+                </div>
+            </div>
+            <!-- Run info -->
+            <div id="info-card" class="card">
+                <div class="card-header">Info</div>
+                <div class="card-content">
+                    <div style="font-size: small;">
+                        <br>
+                        Analysis <br>
+                        --------------------------- <br>
+                        R version: {{R_version}} <br>
+                        OUTRIDER version: {{outrider_version}}<br>
+                        FRASER version: {{fraser_version}}<br>
+                        MAE:  <br>
+                        GATK version: {{GATK_version}}<br>
+                        BCFtools version: {{bcftools_version}} <br>
+                        tMAE version: {{tMAE_version}}<br> <br>
+                        Report <br>
+                        --------------------------- <br>
+                        Python version: {{python_version}} <br>
+                        gene panel file: {{gene_panel_file}} <br>
+                        hpo terms: {{hpo_terms}}
+                        <br>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.css" />
+        <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/v/ju/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-html5-3.1.1/sl-2.0.4/datatables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/igv@2.15.13/dist/igv.min.js"></script>
-    <script>
-    $(document).ready(function() {
-        var expressionTable = $('.expression_table').DataTable({
-            select: true,
-            scrollY: '350px',
-            scrollX: true,
-            scrollCollapse: true,
-            pageLength: 5,
-            lengthMenu: [5],
-            paging: true,
-            dom: 'Btp',
-            buttons: ['excel'],
-            order: [['padjust', "asc"]]
-        });
-
-        var spliceTable = $('.splice_table').DataTable({
-            select: true,
-            scrollY: '350px',
-            scrollX: true,
-            scrollCollapse: true,
-            pageLength: 5,
-            lengthMenu: [5],
-            dom: 'Btp',
-            buttons: ['excel'],
-            order: [['padjust', "asc"]]
-        });
-
-        var enrichtmentTable = $('.gene_enrichment').DataTable({
-            select: true,
-            scrollY: '350px',
-            scrollX: true,
-            scrollCollapse: true,
-            pageLength: 5,
-            lengthMenu: [5],
-            dom: 'Btp',
-            buttons: ['excel'],
+        <script>
+            // Sidebar toggle
+            document.getElementById("toggle-button").addEventListener("click", function() {
+                let sidebar = document.getElementById("sidebar");
+                let content = document.getElementById("content");
+                if (sidebar.style.left === "0px") {
+                    sidebar.style.left = "-200px";
+                    content.style.marginLeft = "0px";
+                } else {
+                    sidebar.style.left = "0px";
+                    content.style.marginLeft = "200px";
+                }
+            });
             
-        });
+            // Initialize DataTable
+            $(document).ready(function() {
+            var expressionTable = $('.expression_table').DataTable({
+                select: true,
+                scrollY: '350px',
+                scrollX: '1000px',
+                scrollCollapse: true,
+                pageLength: 10,
+                lengthMenu: [10],
+                paging: true,
+                dom: 'Btp',
+                buttons: ['excel'],
+                order: [['padjust', "asc"]]
+            });
 
+            var spliceTable = $('.splice_table').DataTable({
+                select: true,
+                scrollY: '350px',
+                scrollX: '1000px',
+                scrollCollapse: true,
+                pageLength: 10,
+                lengthMenu: [10],
+                dom: 'Btp',
+                buttons: ['excel'],
+                order: [['padjust', "asc"]]
+            });
+            var maeTable = $('.mae_table').DataTable({
+                select: true,
+                scrollY: '350px',
+                scrollX: '1000px',
+                scrollCollapse: true,
+                pageLength: 10,
+                lengthMenu: [10],
+                dom: 'Btp',
+                buttons: ['excel'],
+                order: [['padjust', "asc"]]
+                
+            });
+            var enrichtmentTable = $('.gene_enrichment').DataTable({
+                select: true,
+                scrollY: '350px',
+                scrollX: '1400px',
+                scrollCollapse: true,
+                pageLength: 10,
+                lengthMenu: [10],
+                dom: 'Btp',
+                buttons: ['excel'],
+                
+            });
 
-    // Filter significance and effect size on input change
-    $('#expression-significance-filter, #splicing-significance-filter, #expression-effect-size-filter, #splicing-effect-size-filter').on('input', updateFilterValues);
-    
-
-    // Custom filter function for significance
-
-    var hpoTerms = {{hpo_terms}}; // Ignore error, is needed for embedding.
-    
-
-    // Function to automatically add HPO terms to the filter list
-    hpoTerms.forEach(function(term) {
-        var filterItem = $('<li class="filter-item"></li>').text(term);
-        var removeButton = $('<button>-</button>').click(function() {
-            $(this).parent().remove();
             filterTable();
         });
-        filterItem.append(removeButton);
-        $('#hpo-filter-list').append(filterItem);
-    });
 
-    
-    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+        // Filter significance and effect size on input change
+        $('#expression-significance-filter, #splicing-significance-filter, #expression-effect-size-filter, #splicing-effect-size-filter, #mae-significance-filter, #mae-effect-size-filter').on('input', updateFilterValues);
 
-        if ( settings.nTable.id == 'DataTables_Table_0' ){
-            var expressionSignificanceFilter = parseFloat($('#expression-significance-filter').val());
-            var expressionEffectSizeFilter = parseFloat($('#expression-effect-size-filter').val());
-            var expressionSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
-            var expressionEffectSize = parseFloat(Math.abs(data[5]) || 0); // col index 4 is zScore
-
-            if (
-                ( isNaN(expressionSignificanceFilter) && isNaN(expressionEffectSizeFilter) ) ||
-                ( expressionSignificance <= expressionSignificanceFilter && isNaN(expressionEffectSizeFilter) ) ||
-                ( isNaN(expressionSignificanceFilter) && expressionEffectSize >= expressionEffectSizeFilter ) ||
-                ( expressionSignificance <= expressionSignificanceFilter && expressionEffectSize >= expressionEffectSizeFilter )
-            ) {
-                return true;
-            }
-            return false;
-        }
-        return true;
-    });
-    
-    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-        if ( settings.nTable.id == 'DataTables_Table_1' ){
-            var splicingSignificanceFilter = parseFloat($('#splicing-significance-filter').val());
-            var splicingEffectSizeFilter = parseFloat($('#splicing-effect-size-filter').val());
-            var splicingSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
-            var splicingEffectSize = parseFloat(Math.abs(data[9]) || 0); // col index 8 is deltaPsi
-
-            if (
-                ( isNaN(splicingSignificanceFilter) && (isNaN(splicingEffectSizeFilter)) ) ||
-                ( isNaN(splicingSignificanceFilter) && splicingEffectSize >= splicingEffectSizeFilter ) ||
-                ( splicingSignificance <= splicingSignificanceFilter && isNaN(splicingEffectSizeFilter) ) ||
-                ( splicingSignificance <= splicingSignificanceFilter && splicingEffectSize >= splicingEffectSizeFilter )
-
-            ) {
-                return true;
-            }
-            return false;
-        }
-        return true;
-    });
-
-    filterTable(); // Apply filters when the page loads
-    showSection("expression"); // Apply section filtering (helps with loading the plots properly)
-
-    });
         // Update the displayed filter values
-    function updateFilterValues() {
-        $('#expression-significance-value').text($('#expression-significance-filter').val());
-        $('#splicing-significance-value').text($('#splicing-significance-filter').val());
-        $('#expression-effect-size-value').text($('#expression-effect-size-filter').val());
-        $('#splicing-effect-size-value').text($('#splicing-effect-size-filter').val());
-        filterTable();
-    }
+        function updateFilterValues() {
+            $('#expression-significance-value').text($('#expression-significance-filter').val());
+            $('#splicing-significance-value').text($('#splicing-significance-filter').val());
+            $('#expression-effect-size-value').text($('#expression-effect-size-filter').val());
+            $('#splicing-effect-size-value').text($('#splicing-effect-size-filter').val());
+            $('#mae-significance-value').text($('#mae-significance-filter').val());
+            $('#mae-effect-size-value').text($('#mae-effect-size-filter').val());
+            filterTable();
+        };
+        // add gene/hpo filtering
+        var hpoTerms = {{hpo_terms}};
 
-    function addFilter(type) {
-        var value = $('#' + type + '-filter').val().trim();
-        if (value) {
-            var filterList = $('#' + type + '-filter-list');
-            var filterItem = $('<li class="filter-item"></li>').text(value);
-            var removeButton = $('<button>-</button>').click(function() {
+        // Function to automatically add HPO terms to the filter list
+        hpoTerms.forEach(function(term) {
+            var filterItem = $('<li class="filter-item"></li>').text(term);
+            var removeButton = $('<button></button>').click(function() {
                 $(this).parent().remove();
                 filterTable();
             });
             filterItem.append(removeButton);
-            filterList.append(filterItem);
-            $('#' + type + '-filter').val('');
-            filterTable();
-        }
-    }
-
-    function filterTable() {
-        var genePanelList = {{gene_panel_list}};
-        var geneFilters = $('#gene-filter-list').children().map(function() {
-            return $(this).text().slice(0, -1).toLowerCase();
-        }).get();
-
-        var genepanelCheckBox = document.getElementById("genepanelCheckbox")
-        if (genepanelCheckBox.checked == true){
-            geneFilters.push.apply(geneFilters, genePanelList);
+            $('#hpo-filter-list').append(filterItem);
+        });
+        function addFilter(type) {
+            var value = $('#' + type + '-input').val().trim();
+            if (value) {
+                var filterList = $('#' + type + '-filter-list');
+                var filterItem = $('<li class="filter-item"></li>').text(value);
+                var removeButton = $('<button></button>').click(function() {
+                    $(this).parent().remove();
+                    filterTable();
+                });
+                filterItem.append(removeButton);
+                filterList.append(filterItem);
+                $('#' + type + '-input').val(''); //clear input
+                filterTable();
+            }
         };
-        var geneFilterString = geneFilters.length > 0 ? geneFilters.join('|') : '';
-
-        var hpoFilters = $('#hpo-filter-list').children().map(function() {
-            return $(this).text().slice(0, -1).toLowerCase();
-        }).get();
-        var hpoFilterString = hpoFilters.length > 0 ? hpoFilters.join('|') : '';
-
-        var expressionTable = $('.expression_table').DataTable();
-
-        expressionTable.columns().every(function() {
-            var header = this.header().textContent.toLowerCase();
-            if (header.includes('gene')) {
-                this.search(geneFilterString, true, false).draw();
-            } else if (header.includes('hpo')) {
-                this.search(hpoFilterString, true, false).draw();
-            }
-
-        });
-
-        var spliceTable = $('.splice_table').DataTable();
-        spliceTable.columns().every(function() {
-            var header = this.header().textContent.toLowerCase();
-            if (header.includes('gene')) {
-                this.search(geneFilterString, true, false).draw();
-            } else if (header.includes('hpo')) {
-                this.search(hpoFilterString, true, false).draw();
-            }
-                
-        });
         
-        expressionTable.draw();
-        spliceTable.draw();
-    }
-    function headerIndex(settings, headerName) {
-        var index = -1;
-        settings.aoColumns.forEach(function(column, i) {
-            if (column.sTitle.toLowerCase().includes(headerName)) {
-            index = i;
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            if ( settings.nTable.id == 'DataTables_Table_0' ){
+                var expressionSignificanceFilter = parseFloat($('#expression-significance-filter').val());
+                var expressionEffectSizeFilter = parseFloat($('#expression-effect-size-filter').val());
+                var expressionSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
+                var expressionEffectSize = parseFloat(Math.abs(data[5]) || 0); // col index 4 is zScore
+
+                if (
+                    ( isNaN(expressionSignificanceFilter) && isNaN(expressionEffectSizeFilter) ) ||
+                    ( expressionSignificance <= expressionSignificanceFilter && isNaN(expressionEffectSizeFilter) ) ||
+                    ( isNaN(expressionSignificanceFilter) && expressionEffectSize >= expressionEffectSizeFilter ) ||
+                    ( expressionSignificance <= expressionSignificanceFilter && expressionEffectSize >= expressionEffectSizeFilter )
+                ) {
+                    return true;
+                }
+                return false;
             }
-        });
-        return index;
-    }
+            return true;
+            });
 
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            if ( settings.nTable.id == 'DataTables_Table_1' ){
+                var splicingSignificanceFilter = parseFloat($('#splicing-significance-filter').val());
+                var splicingEffectSizeFilter = parseFloat($('#splicing-effect-size-filter').val());
+                var splicingSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
+                var splicingEffectSize = parseFloat(Math.abs(data[9]) || 0); // col index 9 is deltaPsi
 
-    function getRowSelection(table){
-        table.on('select', function (e, dt, type, indexes) {
-        if (type === 'row') {
-        var data = table
-            .rows(indexes)
-            .data()
-            .pluck('id');
-        }})
-    }
+                if (
+                    ( isNaN(splicingSignificanceFilter) && (isNaN(splicingEffectSizeFilter)) ) ||
+                    ( isNaN(splicingSignificanceFilter) && splicingEffectSize >= splicingEffectSizeFilter ) ||
+                    ( splicingSignificance <= splicingSignificanceFilter && isNaN(splicingEffectSizeFilter) ) ||
+                    ( splicingSignificance <= splicingSignificanceFilter && splicingEffectSize >= splicingEffectSizeFilter )
 
-    function showSection(sectionId) {
-        // Hide all sections
-        var sections = document.querySelectorAll('.filters');
-        sections.forEach(function(section) {
-            section.classList.remove('active');
-        });
-        var sections = document.querySelectorAll('.row-content');
-        sections.forEach(function(section) {
-            section.classList.remove('active');
-        });
+                ) {
+                    return true;
+                }
+                return false;
+            }
+            return true;
+            });
 
-        var sections = document.querySelectorAll('.header a');
-        sections.forEach(function(section) {
-            section.classList.remove('active');
-        });
+            
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            if ( settings.nTable.id == 'DataTables_Table_2' ){
+                var maeSignificanceFilter = parseFloat($('#mae-significance-filter').val());
+                var maeEffectSizeFilter = parseFloat($('#mae-effect-size-filter').val());
+                var maeSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
+                var maeEffectSize = parseFloat(Math.abs(data[7]) || 0); // col index 6 is deltaPsi
 
+                if (
+                    ( isNaN(maeSignificanceFilter) && (isNaN(maeEffectSizeFilter)) ) ||
+                    ( isNaN(maeSignificanceFilter) && maeEffectSize >= maeEffectSizeFilter ) ||
+                    ( maeSignificance <= maeSignificanceFilter && isNaN(maeEffectSizeFilter) ) ||
+                    ( maeSignificance <= maeSignificanceFilter && maeEffectSize >= maeEffectSizeFilter )
 
-        // Show the selected section
-        var activeSection = document.getElementById(sectionId);
-        activeSection.classList.add('active');
+                ) {
+                    return true;
+                }
+                return false;
+            }
+            return true;
+            });
 
-        if(sectionId == 'expression'){
-            var activeEnrichmentSection = document.getElementById(sectionId.concat("-gene-enrichment"));
-            activeEnrichmentSection.classList.add('active');
+        function headerIndex(settings, headerName) {
+            var index = -1;
+            settings.aoColumns.forEach(function(column, i) {
+                if (column.sTitle.toLowerCase().includes(headerName)) {
+                index = i;
+                }
+            });
+            return index;
+        }
+
+        function showSection(sectionId) {
+            // Hide all sections
+            var sections = document.querySelectorAll('.sidebar a');
+            sections.forEach(function(section) {
+                section.classList.remove('active');
+            });
+            var sections = document.querySelectorAll('.filter-box');
+            sections.forEach(function(section) {
+                section.classList.remove('active');
+            });
+
+            var sections = document.querySelectorAll('.card');
+            sections.forEach(function(section) {
+                section.classList.remove('active');
+            });
+            
+            
+
+            var activeButtonfilter = document.getElementById(sectionId.concat("-button"));
+            activeButtonfilter.classList.add('active');
+
+            if (sectionId !== "info") {
+                var activeFiltersfilter = document.getElementById(sectionId.concat("-filters"));
+                activeFiltersfilter.classList.add('active');
+
+                var activeGenefilter = document.getElementById("gene-filter");
+                activeGenefilter.classList.add('active');
+
+                var hpoFilters = $('#hpo-filter-list').children().map(function() {
+                    return $(this).text().slice(0, -1).toLowerCase();
+                    }).get();
+
+                if (hpoFilters.length > 0) {
+                    document.getElementById("hpo-filter").classList.add('active')
+                };
+            }
+
+            var activeCardfilter = document.getElementById(sectionId.concat("-card"));
+            activeCardfilter.classList.add('active');
         };
 
-        var activeButtonfilter = document.getElementById(sectionId.concat("-button"));
-        activeButtonfilter.classList.add('active');
+        function filterTable() {
+            var geneFilters = $('#gene-filter-list').children().map(function() {
+                return $(this).text().slice(0, -1).toLowerCase();
+            }).get();
 
-        var activeSectionfilter = document.getElementById(sectionId.concat("-filter"));
-        activeSectionfilter.classList.add('active');
+            
+            var geneFilterString = geneFilters.length > 0 ? geneFilters.join('|') : '';
 
-        var genePanelList = {{gene_panel_list}};
-        
-        // Additional (optional) filters hpo and genepanel
-        if (genePanelList.length > 0) {
-            document.getElementById("genepanel-filter").classList.add('active')
-        }
+            var hpoFilters = $('#hpo-filter-list').children().map(function() {
+                return $(this).text().slice(0, -1).toLowerCase();
+            }).get();
+            var hpoFilterString = hpoFilters.length > 0 ? hpoFilters.join('|') : '';
 
-        var hpoFilters = $('#hpo-filter-list').children().map(function() {
-            return $(this).text().slice(0, -1).toLowerCase();
-        }).get();
+            var expressionTable = $('.expression_table').DataTable();
 
-        if (hpoFilters.length > 0) {
-            document.getElementById("hpo-filter").classList.add('active')
-        }
-        
+            expressionTable.columns().every(function() {
+                var header = this.header().textContent.toLowerCase();
+                if (header.includes('gene')) {
+                    this.search(geneFilterString, true, false).draw();
+                } else if (header.includes('hpo')) {
+                    this.search(hpoFilterString, true, false).draw();
+                }
 
-    }
-    
-    </script>
-</body>
+            });
+
+            var spliceTable = $('.splice_table').DataTable();
+            spliceTable.columns().every(function() {
+                var header = this.header().textContent.toLowerCase();
+                if (header.includes('gene')) {
+                    this.search(geneFilterString, true, false).draw();
+                } else if (header.includes('hpo')) {
+                    this.search(hpoFilterString, true, false).draw();
+                }
+                    
+            });
+
+            var maeTable = $('.mae_table').DataTable();
+            maeTable.columns().every(function() {
+                var header = this.header().textContent.toLowerCase();
+                if (header.includes('gene')) {
+                    this.search(geneFilterString, true, false).draw();
+                } else if (header.includes('hpo')) {
+                    this.search(hpoFilterString, true, false).draw();
+                }
+                    
+            });
+            
+            expressionTable.draw();
+            spliceTable.draw();
+            maeTable.draw()
+        };
+
+        showSection("expression"); //Set expression as active on load
+        </script>
+    </body>
 </html>
