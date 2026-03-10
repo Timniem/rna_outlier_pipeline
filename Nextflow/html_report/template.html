@@ -316,7 +316,7 @@
             <!-- Expression filters  -->
             <div id="expression-filters" class="filter-box">
                 <div id="expression-significance-slider" class="slider">
-                    <label for="expression-significance-filter">pValue (FDR adj):</label>
+                    <label for="expression-significance-filter">Significance ({{filter_pval}}):</label>
                     <input type="range" id="expression-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
                     <span id="expression-significance-value">0.05</span>
                 </div>
@@ -329,7 +329,7 @@
             <!-- Splicing filters  -->
             <div id="splicing-filters" class="filter-box">
                 <div id="splicing-significance-slider" class="slider">
-                    <label for="splicing-significance-filter">pValue (FDR adj):</label>
+                    <label for="splicing-significance-filter">Significance ({{filter_pval}}):</label>
                     <input type="range" id="splicing-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
                     <span id="splicing-significance-value">0.05</span>
                 </div>
@@ -342,7 +342,7 @@
             <!-- MAE filters  -->
             <div id="mae-filters" class="filter-box">
                 <div id="mae-significance-slider" class="slider">
-                    <label for="mae-significance-filter">pValue (FDR adj):</label>
+                    <label for="mae-significance-filter">Significance ({{filter_pval}}):</label>
                     <input type="range" id="mae-significance-filter" min="0" max="1" step="0.05" value="0.05" oninput="updateFilterValues()">
                     <span id="mae-significance-value">0.05</span>
                 </div>
@@ -386,7 +386,7 @@
             <div id="info-card" class="card">
                 <div class="card-header">Info</div>
                 <div class="card-content">
-                    <div style="font-size: small;">
+                    <div style="font-size: medium;">
                         <br>
                         Analysis <br>
                         --------------------------- <br>
@@ -438,7 +438,7 @@
                 paging: true,
                 dom: 'Btp',
                 buttons: ['excel'],
-                order: [['padjust', "asc"]]
+                order: [['{{filter_pval}}', "asc"]]
             });
 
             var spliceTable = $('.splice_table').DataTable({
@@ -450,8 +450,9 @@
                 lengthMenu: [10],
                 dom: 'Btp',
                 buttons: ['excel'],
-                order: [['padjust', "asc"]]
+                order: [['{{filter_pval}}', "asc"]]
             });
+            
             var maeTable = $('.mae_table').DataTable({
                 select: true,
                 scrollY: '350px',
@@ -461,9 +462,10 @@
                 lengthMenu: [10],
                 dom: 'Btp',
                 buttons: ['excel'],
-                order: [['padjust', "asc"]]
+                order: [['{{filter_pval}}', "asc"]]
                 
             });
+            
             var enrichtmentTable = $('.gene_enrichment').DataTable({
                 select: true,
                 scrollY: '350px',
@@ -525,7 +527,7 @@
             if ( settings.nTable.id == 'DataTables_Table_0' ){
                 var expressionSignificanceFilter = parseFloat($('#expression-significance-filter').val());
                 var expressionEffectSizeFilter = parseFloat($('#expression-effect-size-filter').val());
-                var expressionSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
+                var expressionSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
                 var expressionEffectSize = parseFloat(Math.abs(data[5]) || 0); // col index 4 is zScore
 
                 if (
@@ -545,7 +547,7 @@
             if ( settings.nTable.id == 'DataTables_Table_1' ){
                 var splicingSignificanceFilter = parseFloat($('#splicing-significance-filter').val());
                 var splicingEffectSizeFilter = parseFloat($('#splicing-effect-size-filter').val());
-                var splicingSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
+                var splicingSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
                 var splicingEffectSize = parseFloat(Math.abs(data[9]) || 0); // col index 9 is deltaPsi
 
                 if (
@@ -567,8 +569,8 @@
             if ( settings.nTable.id == 'DataTables_Table_2' ){
                 var maeSignificanceFilter = parseFloat($('#mae-significance-filter').val());
                 var maeEffectSizeFilter = parseFloat($('#mae-effect-size-filter').val());
-                var maeSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
-                var maeEffectSize = parseFloat(Math.abs(data[7]) || 0); // col index 6 is deltaPsi
+                var maeSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
+                var maeEffectSize = parseFloat(Math.abs(data[7]) || 0); // col index 6
 
                 if (
                     ( isNaN(maeSignificanceFilter) && (isNaN(maeEffectSizeFilter)) ) ||

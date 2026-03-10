@@ -87,8 +87,16 @@ workflow Outrider_Fraser_MAE_nf {
 
     GetMAEresults(ConcatMAEResults.out, params.mae.resultsR, params.mae.annotateGeneR)
 
+    genepanel_ch = Channel
+    .fromPath(params.samplesheet)
+    .splitCsv(header: true, sep: '\t')
+    .map { row -> row.genePanel }
+    .filter { it && it != "NA" }
+    .map { file(it, checkIfExists: true) }
+    .unique() // In case file is used for multiple samples.
+
     // report
-    Channel.empty().mix(Outrider.out, Fraser.out, GetMAEresults.out)
+    genepanel_ch.mix(Outrider.out, Fraser.out, GetMAEresults.out)
     | collect
     | map {it -> tuple( params.samplesheet, it )}
     | ResultsToHtml
