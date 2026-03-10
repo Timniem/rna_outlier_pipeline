@@ -36,9 +36,7 @@ apptainer pull --dir "$APPTAINER_CACHEDIR" report.sif \
 ```
 Add these images to a folder called containers
 
-### 3. Create a samplesheet (.tsv) with the following parameters
-
-sampleID	bamFile	strandSpecific	pairedEnd	excludeFit	genePanel
+### 3. Create a samplesheet (.tsv) with the following parameters:
 
 | Column     | Description | Required | Default | 
 | ----------- | ----------- | -------- | ------- | 
