@@ -524,11 +524,13 @@
         };
         
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            if ( settings.nTable.id == 'DataTables_Table_0' ){
+            if ($(settings.nTable).hasClass('expression_table')){
                 var expressionSignificanceFilter = parseFloat($('#expression-significance-filter').val());
                 var expressionEffectSizeFilter = parseFloat($('#expression-effect-size-filter').val());
                 var expressionSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
                 var expressionEffectSize = parseFloat(Math.abs(data[5]) || 0); // col index 4 is zScore
+                var expressionSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
+                var expressionEffectSize = parseFloat(Math.abs(data[headerIndex(settings, 'zScore')]) || 0); // col index 4 is zScore
 
                 if (
                     ( isNaN(expressionSignificanceFilter) && isNaN(expressionEffectSizeFilter) ) ||
@@ -544,11 +546,13 @@
             });
 
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            if ( settings.nTable.id == 'DataTables_Table_1' ){
+            if ($(settings.nTable).hasClass('splice_table')){
                 var splicingSignificanceFilter = parseFloat($('#splicing-significance-filter').val());
                 var splicingEffectSizeFilter = parseFloat($('#splicing-effect-size-filter').val());
                 var splicingSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
                 var splicingEffectSize = parseFloat(Math.abs(data[9]) || 0); // col index 9 is deltaPsi
+                var splicingSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
+                var splicingEffectSize = parseFloat(Math.abs(data[headerIndex(settings, 'deltaPsi')]) || 0); // col index 9 is deltaPsi
 
                 if (
                     ( isNaN(splicingSignificanceFilter) && (isNaN(splicingEffectSizeFilter)) ) ||
@@ -566,11 +570,13 @@
 
             
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            if ( settings.nTable.id == 'DataTables_Table_2' ){
+            if ($(settings.nTable).hasClass('mae_table')){
                 var maeSignificanceFilter = parseFloat($('#mae-significance-filter').val());
                 var maeEffectSizeFilter = parseFloat($('#mae-effect-size-filter').val());
+                var maeSignificance = parseFloat(data[headerIndex(settings, 'padjust')] || 0);
+                var maeEffectSize = parseFloat(Math.abs(data[7]) || 0); // col index 6 is deltaPsi
                 var maeSignificance = parseFloat(data[headerIndex(settings, '{{filter_pval}}')] || 0);
-                var maeEffectSize = parseFloat(Math.abs(data[7]) || 0); // col index 6
+                var maeEffectSize = parseFloat(Math.abs(data[headerIndex(settings, 'log2FC')]) || 0);
 
                 if (
                     ( isNaN(maeSignificanceFilter) && (isNaN(maeEffectSizeFilter)) ) ||
@@ -589,7 +595,7 @@
         function headerIndex(settings, headerName) {
             var index = -1;
             settings.aoColumns.forEach(function(column, i) {
-                if (column.sTitle.toLowerCase().includes(headerName)) {
+                if (column.sTitle.includes(headerName)) {
                 index = i;
                 }
             });
